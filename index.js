@@ -111,6 +111,58 @@ app.post('/api/start-etl', async (req, res) => {
   }
 });
 
+app.post('/api/start-etl-force', async (req, res) => {
+  if (isEtlRunning) {
+    logger.log('Force ETL start requested but ETL scheduler is already running');
+    return res.status(400).json({
+      message: 'ETL process is already running. Stop the scheduler first or wait for it to complete.',
+      currentSchedule: currentSchedule,
+      startTime: etlStartTime ? etlStartTime.toISOString() : null,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  try {
+    logger.log('Starting forced ETL process');
+    const startTime = new Date();
+    isEtlRunning = true;
+    lastRunTime = startTime;
+
+    const result = await etlService.runEtlProcess();
+
+    const endTime = new Date();
+    const durationMs = endTime - startTime;
+
+    logger.log('Forced ETL process completed', {
+      processed: result.processed,
+      skipped: result.skipped,
+      duration: formatUptime(durationMs)
+    });
+
+    res.json({
+      message: 'Forced ETL process completed successfully',
+      processed: result.processed,
+      skipped: result.skipped,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      duration: formatUptime(durationMs)
+    });
+  } catch (error) {
+    logger.error('Forced ETL process failed', {
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+
+    res.status(500).json({
+      message: 'Forced ETL process failed',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  } finally {
+    isEtlRunning = false;
+  }
+});
+
 app.post('/api/stop-etl', async (req, res) => {
   if (!isEtlRunning) {
     logger.log('Stop ETL request received but scheduler was not running');
