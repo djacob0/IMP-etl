@@ -3,7 +3,7 @@ class EtlLogger {
     this.pool = pool;
   }
 
-  async getRecordsBatch(offset = 0, limit = 10000) {
+  async getRecordsBatch(offset = 0, limit = 100000) {
     const [rows] = await this.pool.query(
       `SELECT log_id, reference_no, \`table\`
         FROM etl_logger_voucher
