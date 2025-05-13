@@ -12,7 +12,7 @@ const app = express();
 const port = process.env.PORT || 5006;
 
 app.use(cors({
-    origin: 'http://localhost:8085',
+    origin: 'http://localhost:3001',
     methods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization'],
